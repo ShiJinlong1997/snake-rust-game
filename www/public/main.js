@@ -1,9 +1,34 @@
-function init() {
-  const byteArray = new Int8Array([0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00, 0x01, 0x07, 0x01, 0x60, 0x02, 0x7F, 0x7F, 0x01, 0x7F, 0x03, 0x02, 0x01, 0x00, 0x07, 0x08, 0x01, 0x04, 0x24, 0x73, 0x75, 0x6D, 0x00, 0x00, 0x0A, 0x09, 0x01, 0x07, 0x00, 0x20, 0x00, 0x20, 0x01, 0x6A, 0x0B, 0x00, 0x18, 0x04, 0x6E, 0x61, 0x6D, 0x65, 0x01, 0x06, 0x01, 0x00, 0x03, 0x73, 0x75, 0x6D, 0x02, 0x09, 0x01, 0x00, 0x02, 0x00, 0x01, 0x61, 0x01, 0x01, 0x62])
-  WebAssembly.instantiate(byteArray).then(function completed(wasm) {
-    debugger
-    console.log(wasm.instance.exports.$sum(10, 20))
+function main() {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+
+  const importObject = {
+    js: {
+      mem: memory,
+    },
+    console: {
+      log: () => {
+        console.log('log');
+      },
+      error: () => {
+        console.error('error');
+      },
+    },
+  };
+
+  fetch('/import_js_mem.wasm')
+  .then(response => response.arrayBuffer())
+  .then(buffer => WebAssembly.instantiate(buffer, importObject))
+  .then(wasm => {
+    const wasmMod = wasm.instance.exports;
+    console.log(wasmMod.sum(10, 20));
+    
+    // 不再用 wasm 导出的内存，用 WebAssembly.Memory 实例
+    // - const uint8Array = new Uint8Array(wasmMod.mem.buffer, 0, 2);
+    // +
+    const uint8Array = new Uint8Array(memory.buffer, 0, 2);
+    const txt = new TextDecoder().decode(uint8Array)
+    console.log(txt)
   });
 }
 
-init();
+main();
