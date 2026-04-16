@@ -1,3 +1,6 @@
+import * as snake from 'snake_game';
+console.log(snake)
+
 function main() {
   const memory = new WebAssembly.Memory({ initial: 1 });
 

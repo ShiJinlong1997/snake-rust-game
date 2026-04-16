@@ -204,3 +204,83 @@ const importObject = {
 ```
 
 不再导出内存，而是导入 js 申请来的内存，在里面写入数据 "Hi"
+
+## wasm 做成包
+
+编辑 `Cargo.toml`：
+
+```diff
++ [dependencies]
++ wasm-bindgen = "0.2.63"
+
++ [lib]
++ crate-type = ["cdylib"]
+
+- [[bin]]
+```
+
+删除 `/src/main.rs`，新建 `src/lib.rs`：
+
+```rs
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+pub fn greet(name: &str) {
+  println!("Hi there{}", name);
+}
+```
+
+`cargo install wasm-pack`，如果已安装，会提示：
+
+```bash
+error: binary `wasm-pack` already exists in destination
+```
+
+可以输入 `cargo install wasm-pack --force`。
+
+`wasm-pack build --target web`
+
+> 如果提示：
+>
+> ```
+> wasm-pack : 无法将“wasm-pack”项识别为 cmdlet、函数、脚本文件或可运行程序的名称  请检查名称的   
+> 。请检查名称的
+> 拼写，如果包括路径，请确保路径正确，然后再试一次。
+> 所在位置 行:1 字符: 1
+> + wasm-pack build --target web
+> + ~~~~~~~~~                                                                    FoundException  
+>     + CategoryInfo          : ObjectNotFound: (wasm-pack:String) [], CommandNotFoundException
+>     + FullyQualifiedErrorId : CommandNotFoundException
+> ```
+>
+> 检查环境变量，是否有 `%CARGO_HOME%\bin`。
+
+成功后，项目会有 `pkg` 目录，里面的 `<项目名>.js`。
+
+> 项目名
+>
+> 同 `Cargo.toml` 的 `[package].name`
+
+成功后，结尾若有如下信息：
+```
+To disable `wasm-opt`, add `wasm-opt = false` to your package metadata in your `Cargo.toml`.
+```
+
+就在 `Cargo.toml` 添加：
+```toml
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+```
+
+## pkg 链接到 node_modules
+
+生成的 `pkg` 目录里有 `package.json` 才算真正成功。
+
+前端项目目录 `www` 的 `package.json`：
+```diff
+"dependencies": {
+  "snake_game": "file:../pkg"
+}
+```
+
+再输入 `npm i`，`pkg` 里的东西就到 `node_moduels` 了（`snake_game` 在资源管理器目录图标显示为快捷方式）
