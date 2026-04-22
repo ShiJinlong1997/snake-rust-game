@@ -54,18 +54,32 @@ impl World {
     }
 
     pub fn update(&mut self) {
-        let snake_idx = self.snake_head_idx();
-        // 0 <= 下标范围 < 64
-        // self.snake.body[0].0 = (snake_idx - 1) % self.size;
+        let (row, col) = self.index_to_cell(self.snake_head_idx());
+        let (row, col) = match self.snake.dir {
+            Direction::Right => (row, self.clamp(col + 1) % self.width),
+            Direction::Left => (row, self.clamp(col - 1) % self.width),
+            Direction::Up => (self.clamp(row - 1) % self.width, col),
+            Direction::Down => (self.clamp(row + 1) % self.width, col),
+        };
 
-        if (Direction::Right == self.snake.dir) {
-            self.snake.body[0].0 = (snake_idx + 1) % self.size;
-        } else if (Direction::Left == self.snake.dir) {
-            self.snake.body[0].0 = (snake_idx - 1) % self.size;
-        } else if (Direction::Up == self.snake.dir) {
-            self.snake.body[0].0 = (snake_idx - self.width) % self.size;
-        } else if (Direction::Down == self.snake.dir) {
-            self.snake.body[0].0 = (snake_idx + self.width) % self.size;
-        }
+        let next_idx = self.cell_to_index(row, col);
+        self.set_snake_head(next_idx);
+    }
+
+    fn set_snake_head(&mut self, idx: usize) {
+        self.snake.body[0].0 = idx;
+    }
+
+    fn clamp(&self, x: usize) -> usize {
+        // 避免自减小于 0
+        return x + self.width;
+    }
+
+    fn index_to_cell(&self, idx: usize) -> (usize, usize) {
+        return (idx / self.width, idx % self.width);
+    }
+
+    fn cell_to_index(&self, row: usize, col: usize) -> usize {
+        return row * self.width + col;
     }
 }

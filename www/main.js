@@ -3,7 +3,8 @@ import init, { World } from 'snake_game';
 function start() {
   const CELL_SIZE = 20;
   const WORLD_WIDTH = 8;
-  const SNAKE_SPAWN_IDX = Date.now() % Math.pow(WORLD_WIDTH,2);
+  const WORLD_SIZE = Math.pow(WORLD_WIDTH,2);
+  const SNAKE_SPAWN_IDX = /* Date.now() % WORLD_SIZE */ 0;
   
   const world = World.new(WORLD_WIDTH, SNAKE_SPAWN_IDX);
   
