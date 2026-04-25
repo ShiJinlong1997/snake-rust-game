@@ -1,10 +1,11 @@
-import init, { World } from 'snake_game';
+import init, { Direction, World } from 'snake_game';
 
-function start() {
+/** @param {import('snake_game').InitOutput} wasm  */
+function start(wasm) {
   const CELL_SIZE = 20;
   const WORLD_WIDTH = 8;
   const WORLD_SIZE = Math.pow(WORLD_WIDTH,2);
-  const SNAKE_SPAWN_IDX = /* Date.now() % WORLD_SIZE */ 0;
+  const SNAKE_SPAWN_IDX = 10 /* Date.now() % WORLD_SIZE */;
   
   const world = World.new(WORLD_WIDTH, SNAKE_SPAWN_IDX);
   
@@ -13,6 +14,23 @@ function start() {
   const ctx = canvas.getContext('2d');
   canvas.height = WORLD_WIDTH * CELL_SIZE;
   canvas.width = WORLD_WIDTH * CELL_SIZE;
+
+  document.addEventListener('keydown', event => {
+    switch (event.code) {
+      case 'ArrowUp':
+        world.set_snake_dir(Direction.Up);
+        break;
+      case 'ArrowRight':
+        world.set_snake_dir(Direction.Right);
+        break;
+      case 'ArrowDown':
+        world.set_snake_dir(Direction.Down);
+        break;
+      case 'ArrowLeft':
+        world.set_snake_dir(Direction.Left);
+        break;
+    }
+  });
 
   function drawWorld() {
     ctx.beginPath();
@@ -33,12 +51,26 @@ function start() {
   }
 
   function drawSnake() {
-    const snakeIdx = world.snake_head_idx();
-    const col = snakeIdx % WORLD_WIDTH;
-    const row = Math.floor(snakeIdx / WORLD_WIDTH);
-    ctx.beginPath();
-    ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-    ctx.stroke();
+    const snakeCells = new Uint32Array(
+      wasm.memory.buffer,
+      world.snake_cells(),
+      world.snake_len()
+    );
+
+    snakeCells.forEach(cellIdx => {
+      const col = cellIdx % WORLD_WIDTH;
+      const row = Math.floor(cellIdx / WORLD_WIDTH);
+      ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    });
+
+    snakeCells.slice(0, 1).forEach(cellIdx => {
+      const col = cellIdx % WORLD_WIDTH;
+      const row = Math.floor(cellIdx / WORLD_WIDTH);
+      ctx.save();
+      ctx.fillStyle = '#7878db';
+      ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      ctx.restore();
+    });
   }
 
   function paint() {
@@ -50,7 +82,7 @@ function start() {
     const fps = 10;
     setTimeout(() => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      world.update();
+      world.step();
       paint();
       requestAnimationFrame(update);
     }, 1000 / fps);
