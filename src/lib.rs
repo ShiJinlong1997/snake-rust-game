@@ -14,6 +14,7 @@ pub enum Direction {
 }
 
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct SnakeCell(usize);
 
 struct Snake {
@@ -84,7 +85,14 @@ impl World {
     // }
 
     pub fn step(&mut self) {
+        // 蛇头移动前创建出蛇的副本
+        let bodyDuplicate = self.snake.body.clone();
         self.snake.body[0] = self.gen_snake_cell();
+
+        // 从下标 1 开始，所以身体部分，移到之前前一个身体部分的位置
+        for i in 1..self.snake.body.len() {
+            self.snake.body[i] = SnakeCell(bodyDuplicate[i - 1].0);
+        }
     }
 
     pub fn gen_snake_cell(&self) -> SnakeCell {
