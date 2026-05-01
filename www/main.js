@@ -1,19 +1,31 @@
 import init, { Direction, World } from 'snake_game';
+import { rnd } from './util/rnd.js';
 
 /** @param {import('snake_game').InitOutput} wasm  */
 function start(wasm) {
   const CELL_SIZE = 20;
-  const WORLD_WIDTH = 8;
+  const WORLD_WIDTH = 4;
   const WORLD_SIZE = Math.pow(WORLD_WIDTH,2);
-  const SNAKE_SPAWN_IDX = 10 /* Date.now() % WORLD_SIZE */;
+  const SNAKE_HEAD_IDX = rnd(WORLD_SIZE);
   
-  const world = World.new(WORLD_WIDTH, SNAKE_SPAWN_IDX);
+  const world = World.new(WORLD_WIDTH, SNAKE_HEAD_IDX);
   
   /** @type {HTMLCanvasElement} */
   const canvas = document.getElementById('snake-canvas');
   const ctx = canvas.getContext('2d');
   canvas.height = WORLD_WIDTH * CELL_SIZE;
   canvas.width = WORLD_WIDTH * CELL_SIZE;
+
+  document.getElementById('game-ctrl-btn').addEventListener('click', () => {
+    const status = world.status();
+    if (void 0 == status) {
+      world.start();
+      update();
+      document.getElementById('game-ctrl-btn').textContent = '刷新';
+    } else {
+      location.reload();
+    }
+  });
 
   document.addEventListener('keydown', event => {
     switch (event.code) {
@@ -50,6 +62,24 @@ function start(wasm) {
     ctx.stroke();
   }
 
+  function drawReward() {
+    const idx = world.reward_idx();
+    if (void 0 == idx) {
+      return;
+    }
+    const col = idx % WORLD_WIDTH;
+    const row = Math.floor(idx / WORLD_WIDTH);
+    ctx.save();
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(
+      col * CELL_SIZE,
+      row * CELL_SIZE,
+      CELL_SIZE,
+      CELL_SIZE
+    );
+    ctx.restore();
+  }
+
   function drawSnake() {
     const snakeCells = new Uint32Array(
       wasm.memory.buffer,
@@ -73,13 +103,19 @@ function start(wasm) {
     });
   }
 
+  function drawGameStatus() {
+    document.querySelector('label + span').textContent = world.status_txt();;
+  }
+
   function paint() {
     drawWorld();
     drawSnake();
+    drawReward();
+    drawGameStatus();
   }
 
   function update() {
-    const fps = 10;
+    const fps = 1;
     setTimeout(() => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       world.step();
@@ -89,10 +125,10 @@ function start(wasm) {
   }
 
   paint();
-  update();
+  drawGameStatus();
 }
 
-async function main() {
+function main() {
   init()
   .then(start);
 }

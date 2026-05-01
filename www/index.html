@@ -15,11 +15,23 @@
         place-content: center;
         place-items: center;
       }
+
+      header {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      label { font-weight: bold; }
     </style>
   </head>
   <body>
     <div class="content-wrapper">
-      snake canvas
+      <header>
+        <button id="game-ctrl-btn" type="button">开始</button>
+        <label>状态：</label>
+        <span></span>
+      </header>
       <canvas id="snake-canvas"></canvas>
     </div>
     <script type="module" src="./main.js"></script>
