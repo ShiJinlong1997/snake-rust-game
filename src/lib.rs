@@ -179,6 +179,8 @@ impl World {
                         self.reward_idx = Option::None;
                         self.status = Option::Some(GameStatus::Won);
                     }
+                    // 教程先创建奖品后添加蛇身，管逑它，我就想先添加蛇身
+                    // self.snake.body.push(SnakeCell(self.snake.body[1].0));
                 }
             }
             _ => {}

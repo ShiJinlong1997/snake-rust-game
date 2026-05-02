@@ -1,4 +1,4 @@
-import init, { Direction, World } from 'snake_game';
+import init, { Direction, GameStatus, World } from 'snake_game';
 import { rnd } from './util/rnd.js';
 
 /** @param {import('snake_game').InitOutput} wasm  */
@@ -115,8 +115,11 @@ function start(wasm) {
   }
 
   function update() {
-    const fps = 1;
+    if ([GameStatus.Lost, GameStatus.Won].includes(world.status())) { return; }
+
+    const fps = 2;
     setTimeout(() => {
+      console.log('playing')
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       world.step();
       paint();
